@@ -16,4 +16,10 @@ export const EMPTY_APPLICATION = {
   deadline_on: '',
   next_step_on: '',
   notes: '',
+  city: '',
+  term: '',
+  external_id: '',
+  division: '',
+  openings: '',
+  job_status: '',
 }

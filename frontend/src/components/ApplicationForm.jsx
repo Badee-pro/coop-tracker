@@ -17,7 +17,8 @@ export default function ApplicationForm({ initial, onSave, onDelete, onCancel })
     setSaving(true)
     setError(null)
     try {
-      const { id, created_at, updated_at, ...payload } = form
+      const { id, created_at, updated_at, source_status, ...payload } = form
+      if (payload.external_id === '') payload.external_id = null
       await onSave(payload)
     } catch (err) {
       setError(err.message)
@@ -51,6 +52,30 @@ export default function ApplicationForm({ initial, onSave, onDelete, onCancel })
           <label>
             Location
             <input value={form.location} onChange={set('location')} />
+          </label>
+          <label>
+            City
+            <input value={form.city} onChange={set('city')} />
+          </label>
+          <label>
+            Term
+            <input value={form.term} onChange={set('term')} placeholder="2027 - Winter" />
+          </label>
+          <label>
+            WaterlooWorks Job ID
+            <input value={form.external_id} onChange={set('external_id')} />
+          </label>
+          <label>
+            Division
+            <input value={form.division} onChange={set('division')} />
+          </label>
+          <label>
+            Openings
+            <input type="number" min="0" value={form.openings} onChange={set('openings')} />
+          </label>
+          <label>
+            Job status
+            <input value={form.job_status} onChange={set('job_status')} placeholder="Open for Applications" />
           </label>
           <label className="span-2">
             Posting URL
