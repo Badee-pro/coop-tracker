@@ -82,7 +82,28 @@ h1 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
   font-size: 13px;
   color: var(--muted);
 }
-.sync-bar.sync-error { border-color: var(--rejected); color: var(--rejected); }
+.sync-bar strong { color: var(--text); }
+.sync-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  background: var(--muted);
+}
+.sync-ok .sync-dot { background: var(--offer); }
+.sync-warning .sync-dot { background: var(--interviewing); }
+.sync-pending { border-color: var(--interviewing); }
+.sync-pending .sync-dot { background: var(--interviewing); animation: pulse 1.2s ease-in-out infinite; }
+.sync-error { border-color: color-mix(in srgb, var(--rejected) 60%, var(--border)); }
+.sync-error .sync-dot { background: var(--rejected); }
+.sync-last { color: var(--muted); }
+.sync-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.extension-notice-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.extension-notice-head .btn { text-decoration: none; }
+.extension-notice.highlight { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); }
+@keyframes pulse { 50% { opacity: 0.3; } }
 
 .setup {
   background: var(--surface);
@@ -322,6 +343,9 @@ kbd {
 
 @media (max-width: 640px) {
   .app { padding: 20px 16px 40px; }
+  .header-actions { display: none; }
+  .status-pill { pointer-events: none; background-image: none; padding-right: 10px; }
+  .apps-table tbody tr { cursor: default; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .col-city, .col-applied_on { display: none; }
   .grid { grid-template-columns: 1fr; }

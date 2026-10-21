@@ -26,4 +26,9 @@ export const getSyncStatus = () => request('/api/waterloo_works/status')
 
 export const syncWaterlooWorks = () => request('/api/waterloo_works/sync', { method: 'POST' })
 
+export const cancelWaterlooWorksSync = () => request('/api/waterloo_works/sync/cancel', { method: 'POST' })
+
+export const importWaterlooWorksItems = (items) =>
+  request('/api/waterloo_works/import', { method: 'POST', body: JSON.stringify({ items }) })
+
 export const deleteApplication = (id) => request(`${BASE}/${id}`, { method: 'DELETE' })

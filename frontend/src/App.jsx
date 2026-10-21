@@ -189,7 +189,7 @@ export default function App() {
               rows={pageRows}
               sort={sort}
               onSort={toggleSort}
-              onOpen={setEditing}
+              onOpen={(a) => !window.matchMedia('(max-width: 640px)').matches && setEditing(a)}
               onStatusChange={changeStatus}
             />
             <Pagination
