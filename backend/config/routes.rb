@@ -3,7 +3,9 @@ Rails.application.routes.draw do
 
   namespace :api do
     get "waterloo_works/status", to: "waterloo_works#status"
-    post "waterloo_works/sync", to: "waterloo_works#sync"
+    post "waterloo_works/sync", to: "waterloo_works#browser_sync"
+    post "waterloo_works/sync/cancel", to: "waterloo_works#cancel_sync"
+    post "waterloo_works/import", to: "waterloo_works#import_items"
 
     resources :job_applications do
       get :stats, on: :collection
