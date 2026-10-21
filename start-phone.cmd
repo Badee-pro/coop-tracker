@@ -1,0 +1,10 @@
+@echo off
+set "ROOT=%~dp0"
+set "PATH=C:\Ruby34-x64\bin;%PATH%"
+start "Co-op Tracker - Rails API" cmd /k "cd /d "%ROOT%backend" && ruby bin/rails db:prepare && ruby bin/rails server -p 3000"
+start "Co-op Tracker - React (phone access)" cmd /k "cd /d "%ROOT%frontend" && npm run dev:phone"
+timeout /t 6 /nobreak >nul
+start "" http://localhost:5173
+echo.
+echo On your phone (same Wi-Fi), open the "Network:" address shown in the React window.
+echo Phones can view only; edits and syncing work on this computer.
