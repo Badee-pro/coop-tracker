@@ -17,17 +17,24 @@ cd backend && bundle install && ruby bin/rails db:prepare && ruby bin/rails serv
 cd frontend && npm install && npm run dev
 ```
 
+## Viewing on your phone
+
+Run `start-phone.cmd` instead of `start.cmd`, then open the **Network** address printed in the React window on a phone on the same Wi-Fi. Phones get a read-only view: syncing, adding, editing and deleting only work on the computer running the tracker (requests from other devices are rejected). Avoid sharing it on public or campus Wi-Fi, since anyone on that network could view your list.
+
 ## WaterlooWorks auto-sync
 
 The Rails server calls the same JSON endpoint the WaterlooWorks Applications page uses (`applications.htm?page=N&…`), using your browser session cookie, and imports every page.
 
-1. In Edge DevTools → Network on the WaterlooWorks Applications page, select the `applications.htm?page=1&sort…` request.
-2. In `backend/.env` (copied from `.env.example`, gitignored), set `WW_COOKIE` to its **Cookie** request header and `WW_APPLICATIONS_URL` to its URL.
-3. Restart the app. It syncs on startup and every `WW_SYNC_MINUTES` (default 15). The board also has a **Sync now** button.
+Click **Sync from WaterlooWorks** in the tracker. The Rails server drives its own Microsoft Edge profile (via [Ferrum](https://github.com/rubycdp/ferrum), stored in `backend/tmp/waterloo_works_browser`):
 
-The cookie expires when your WaterlooWorks login does; the sync bar shows an error then, and you paste a fresh one. Applications are matched by Job ID, so re-syncing updates them instead of duplicating.
+1. It first checks invisibly whether that profile is still signed in. If so, it opens your Applications page, reads every page of the same JSON call WaterlooWorks uses, imports them and closes. No window appears.
+2. If not, it opens a visible Edge window on the WaterlooWorks sign-in. Sign in (Edge can save your password there for next time); the window then reads your applications and closes by itself.
 
-API: `GET /api/waterloo_works/status`, `POST /api/waterloo_works/sync`.
+The status bar shows each step and the last sync time. Sessions live in `backend/tmp/` (gitignored) and are filtered from logs. `WW_COOKIE` / `WW_APPLICATIONS_URL` in `backend/.env` still work as a manual fallback.
+
+Applications are matched by Job ID, so re-syncing updates them instead of duplicating.
+
+API: `GET /api/waterloo_works/status`, `POST /api/waterloo_works/sync`, `POST /api/waterloo_works/sync/cancel`.
 
 ## API
 
