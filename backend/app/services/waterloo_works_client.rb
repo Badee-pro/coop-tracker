@@ -63,7 +63,8 @@ class WaterlooWorksClient
       body = get_json(page_url(page))
       items = Array(body["data"])
       total ||= body["totalResults"].to_i
-      rows.concat(items.map { |item| map_item(item) })
+      items.each { |item| @seen_keys.merge(Array(item["data"]).map { |cell| cell["key"].to_s }) }
+      rows.concat(items.map { |item| self.class.map_item(item) })
       break if items.empty? || (total.positive? && rows.size >= total)
     end
 
@@ -116,9 +117,8 @@ class WaterlooWorksClient
     raise Error, "WaterlooWorks did not return JSON (saved to tmp/waterloo_works_last_response.txt)."
   end
 
-  def map_item(item)
+  def self.map_item(item)
     pairs = Array(item["data"]).each_with_object({}) { |cell, h| h[cell["key"].to_s] = cell["value"] }
-    @seen_keys.merge(pairs.keys)
 
     pairs.each_with_object({}) do |(key, value), row|
       field = KEY_MAP[key.downcase.gsub(/[^a-z]/, "")]
@@ -128,7 +128,7 @@ class WaterlooWorksClient
     end
   end
 
-  def normalize(field, value)
+  def self.normalize(field, value)
     return nil if value.nil?
     return parse_date(value) if DATE_FIELDS.include?(field)
     return value.to_i if field == :openings
@@ -136,7 +136,7 @@ class WaterlooWorksClient
     value.is_a?(Hash) ? (value["label"] || value["value"] || value.values.first).to_s.strip : value.to_s.strip
   end
 
-  def parse_date(value)
+  def self.parse_date(value)
     return Time.at(value / 1000).to_date.iso8601 if value.is_a?(Numeric)
 
     Date.parse(value.to_s).iso8601

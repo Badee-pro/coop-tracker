@@ -1,40 +1,66 @@
 class WaterlooWorksSync
   STATUS_FILE = Rails.root.join("tmp/waterloo_works_sync.json")
   LOCK = Mutex.new
+  SIGNED_OUT_MESSAGE = "You're not signed in to WaterlooWorks.".freeze
 
   def self.configured?
-    ENV["WW_COOKIE"].present?
+    WaterlooWorksSession.credentials[:cookie].present?
   end
 
   def self.interval_minutes
-    ENV.fetch("WW_SYNC_MINUTES", "15").to_i
+    ENV.fetch("WW_SYNC_MINUTES", "0").to_i
   end
 
   def self.run
     return status.merge("running" => true) unless LOCK.try_lock
 
     begin
-      client = WaterlooWorksClient.new(cookie: ENV["WW_COOKIE"], url: ENV["WW_APPLICATIONS_URL"])
+      return fail_signed_out(nil) unless configured?
+
+      credentials = WaterlooWorksSession.credentials
+      client = WaterlooWorksClient.new(cookie: credentials[:cookie], url: credentials[:url])
       rows = client.fetch_applications
       result = JobApplication.import_rows(rows)
-      write_status("ok" => true, "fetched" => rows.size, "result" => result, "keys" => client.seen_keys.to_a)
-    rescue WaterlooWorksClient::Error => e
-      write_status("ok" => false, "error" => e.message)
+      write_status("ok" => true, "fetched" => rows.size, "result" => result, "keys" => client.seen_keys.to_a,
+                   "last_success_at" => Time.current.iso8601)
+    rescue WaterlooWorksClient::NotLoggedIn => e
+      fail_signed_out(e)
+    rescue SocketError, Socket::ResolutionError, Errno::ECONNREFUSED, Errno::ENETUNREACH, Net::OpenTimeout, Net::ReadTimeout => e
+      fail_with("offline", "Couldn't reach WaterlooWorks. Check your internet connection, then click Sync now.", e)
     rescue StandardError => e
-      Rails.logger.error("[WaterlooWorksSync] #{e.class}: #{e.message}")
-      write_status("ok" => false, "error" => "#{e.class}: #{e.message}")
+      fail_with("failed", "Sync didn't work. Click Sign in to WaterlooWorks, then try again.", e)
     ensure
       LOCK.unlock
     end
   end
 
-  def self.status
-    base = { "configured" => configured?, "interval_minutes" => interval_minutes }
-    return base unless File.exist?(STATUS_FILE)
+  def self.import_items(items)
+    rows = Array(items).map { |item| WaterlooWorksClient.map_item(item) }.select { |r| r[:external_id].present? }
+    result = JobApplication.import_rows(rows)
+    write_status("ok" => true, "source" => "bookmark", "fetched" => rows.size, "result" => result,
+                 "last_success_at" => Time.current.iso8601)
+  end
 
-    base.merge(JSON.parse(File.read(STATUS_FILE)))
+  def self.status
+    base = {
+      "configured" => configured?,
+      "interval_minutes" => interval_minutes,
+      "session_received_at" => WaterlooWorksSession.credentials[:updated_at]
+    }
+    sync = File.exist?(STATUS_FILE) ? JSON.parse(File.read(STATUS_FILE)) : {}
+    base.merge(sync).merge("signed_in" => configured? && sync["ok"] == true)
   rescue JSON::ParserError
     base
+  end
+
+  def self.fail_signed_out(error)
+    fail_with("signed_out", SIGNED_OUT_MESSAGE, error)
+  end
+
+  def self.fail_with(reason, message, error)
+    Rails.logger.warn("[WaterlooWorksSync] #{reason}: #{error&.class}: #{error&.message}") if error
+    write_status("ok" => false, "reason" => reason, "error" => message,
+                 "last_success_at" => status["last_success_at"])
   end
 
   def self.write_status(data)
@@ -44,13 +70,12 @@ class WaterlooWorksSync
   end
 
   def self.start_scheduler
-    return unless configured? && interval_minutes.positive?
+    return unless interval_minutes.positive?
 
     Thread.new do
-      Rails.application.executor.wrap { run }
       loop do
+        Rails.application.executor.wrap { run } if configured?
         sleep interval_minutes * 60
-        Rails.application.executor.wrap { run }
       end
     end
   end
