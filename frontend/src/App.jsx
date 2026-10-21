@@ -1,17 +1,37 @@
 import { useEffect, useMemo, useState } from 'react'
 import { STATUSES } from './constants'
 import { listApplications, createApplication, updateApplication, deleteApplication } from './api'
-import ApplicationCard from './components/ApplicationCard'
+import { isClosedPosting } from './format'
+import ApplicationsTable from './components/ApplicationsTable'
+import Pagination from './components/Pagination'
 import ApplicationForm from './components/ApplicationForm'
+import ImportDialog from './components/ImportDialog'
+import SyncBar from './components/SyncBar'
 import './App.css'
+
+const STATUS_ORDER = Object.fromEntries(STATUSES.map((s, i) => [s.key, i]))
+
+function compare(a, b, key) {
+  if (key === 'status') return STATUS_ORDER[a.status] - STATUS_ORDER[b.status]
+  const x = a[key] ?? ''
+  const y = b[key] ?? ''
+  if (x === '' && y !== '') return 1
+  if (y === '' && x !== '') return -1
+  return String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: 'base' })
+}
 
 export default function App() {
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(null)
+  const [importing, setImporting] = useState(false)
   const [query, setQuery] = useState('')
-  const [dragOver, setDragOver] = useState(null)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [postingFilter, setPostingFilter] = useState('all')
+  const [sort, setSort] = useState({ key: 'applied_on', dir: 'desc' })
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
 
   const load = async () => {
     try {
@@ -26,25 +46,49 @@ export default function App() {
 
   useEffect(() => {
     load()
+    const interval = setInterval(load, 15000)
+    window.addEventListener('focus', load)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', load)
+    }
   }, [])
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return applications
-    return applications.filter((a) =>
-      [a.company, a.role, a.location, a.notes].some((v) => v?.toLowerCase().includes(q)),
-    )
-  }, [applications, query])
+  useEffect(() => setPage(1), [query, statusFilter, postingFilter, pageSize])
 
-  const byStatus = useMemo(
-    () => Object.fromEntries(STATUSES.map((s) => [s.key, filtered.filter((a) => a.status === s.key)])),
-    [filtered],
-  )
+  const counts = useMemo(() => {
+    const c = Object.fromEntries(STATUSES.map((s) => [s.key, 0]))
+    applications.forEach((a) => (c[a.status] = (c[a.status] || 0) + 1))
+    return c
+  }, [applications])
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const rows = applications.filter((a) => {
+      if (statusFilter !== 'all' && a.status !== statusFilter) return false
+      if (postingFilter === 'open' && isClosedPosting(a.job_status)) return false
+      if (postingFilter === 'closed' && !isClosedPosting(a.job_status)) return false
+      if (!q) return true
+      return [a.company, a.role, a.location, a.city, a.term, a.external_id, a.notes, a.division].some((v) =>
+        String(v ?? '').toLowerCase().includes(q),
+      )
+    })
+    const dir = sort.dir === 'asc' ? 1 : -1
+    return rows.sort((a, b) => compare(a, b, sort.key) * dir || compare(b, a, 'applied_on'))
+  }, [applications, query, statusFilter, postingFilter, sort])
+
+  const pages = Math.max(1, Math.ceil(visible.length / pageSize))
+  const currentPage = Math.min(page, pages)
+  const pageRows = visible.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   const total = applications.length
-  const submitted = applications.filter((a) => a.status !== 'wishlist').length
-  const responses = applications.filter((a) => ['interviewing', 'offer', 'rejected'].includes(a.status)).length
+  const submitted = total - counts.wishlist
+  const responses = counts.interviewing + counts.offer + counts.rejected
   const responseRate = submitted ? Math.round((responses / submitted) * 100) : 0
+  const closedPostings = applications.filter((a) => isClosedPosting(a.job_status)).length
+
+  const toggleSort = (key) =>
+    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: key === 'applied_on' || key === 'deadline_on' ? 'desc' : 'asc' }))
 
   const save = async (payload) => {
     if (editing?.id) {
@@ -64,7 +108,7 @@ export default function App() {
     setEditing(null)
   }
 
-  const moveTo = async (id, status) => {
+  const changeStatus = async (id, status) => {
     const current = applications.find((a) => a.id === id)
     if (!current || current.status === status) return
     const patch = { status }
@@ -79,94 +123,91 @@ export default function App() {
     }
   }
 
+  const tabs = [{ key: 'all', label: 'All', count: total }, ...STATUSES.map((s) => ({ ...s, count: counts[s.key] }))]
+
   return (
     <div className="app">
       <header className="header">
         <div>
           <h1>Co-op Tracker</h1>
-          <p className="subtitle">Keep every application moving.</p>
+          <p className="subtitle">{total} applications · {responseRate}% response rate</p>
         </div>
-        <button className="btn primary" onClick={() => setEditing({})}>+ Add application</button>
+        <div className="header-actions">
+          <button className="btn ghost" onClick={() => setImporting(true)}>Paste import</button>
+          <button className="btn primary" onClick={() => setEditing({})}>+ Add application</button>
+        </div>
       </header>
 
       <section className="stats">
-        <div className="stat"><span className="stat-value">{total}</span><span className="stat-label">Tracked</span></div>
-        <div className="stat"><span className="stat-value">{submitted}</span><span className="stat-label">Submitted</span></div>
-        <div className="stat"><span className="stat-value">{applications.filter((a) => a.status === 'interviewing').length}</span><span className="stat-label">Interviewing</span></div>
-        <div className="stat"><span className="stat-value">{applications.filter((a) => a.status === 'offer').length}</span><span className="stat-label">Offers</span></div>
-        <div className="stat"><span className="stat-value">{responseRate}%</span><span className="stat-label">Response rate</span></div>
+        <div className="stat"><span className="stat-label">Submitted</span><span className="stat-value">{submitted}</span></div>
+        <div className="stat"><span className="stat-label">Interviewing</span><span className="stat-value accent-interviewing">{counts.interviewing}</span></div>
+        <div className="stat"><span className="stat-label">Offers</span><span className="stat-value accent-offer">{counts.offer}</span></div>
+        <div className="stat"><span className="stat-label">Rejected</span><span className="stat-value accent-rejected">{counts.rejected}</span></div>
+        <div className="stat"><span className="stat-label">Postings closed</span><span className="stat-value">{closedPostings}</span></div>
       </section>
 
-      {total > 0 && (
-        <div className="progress" aria-label="Pipeline breakdown">
-          {STATUSES.map((s) => {
-            const count = applications.filter((a) => a.status === s.key).length
-            return count ? (
-              <div
-                key={s.key}
-                className={`progress-seg status-${s.key}`}
-                style={{ flexGrow: count }}
-                title={`${s.label}: ${count}`}
-              />
-            ) : null
-          })}
-        </div>
-      )}
-
-      <div className="toolbar">
-        <input
-          className="search"
-          placeholder="Search company, role, location, notes…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-
+      <SyncBar onSynced={load} />
       {error && <div className="banner">{error}</div>}
 
-      {loading ? (
-        <p className="muted">Loading…</p>
-      ) : (
-        <main className="board">
-          {STATUSES.map((s) => (
-            <section
-              key={s.key}
-              className={`column ${dragOver === s.key ? 'drag-over' : ''}`}
-              onDragOver={(e) => {
-                e.preventDefault()
-                setDragOver(s.key)
-              }}
-              onDragLeave={() => setDragOver(null)}
-              onDrop={(e) => {
-                e.preventDefault()
-                setDragOver(null)
-                moveTo(Number(e.dataTransfer.getData('text/plain')), s.key)
-              }}
+      <section className="panel">
+        <div className="tabs" role="tablist">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={statusFilter === t.key}
+              className={`tab ${statusFilter === t.key ? 'active' : ''}`}
+              onClick={() => setStatusFilter(t.key)}
             >
-              <h3 className="column-title">
-                <span className={`dot status-${s.key}`} />
-                {s.label}
-                <span className="count">{byStatus[s.key].length}</span>
-              </h3>
-              <div className="column-body">
-                {byStatus[s.key].map((a) => (
-                  <ApplicationCard key={a.id} application={a} onOpen={setEditing} />
-                ))}
-                {byStatus[s.key].length === 0 && <p className="empty">Drop here</p>}
-              </div>
-            </section>
+              {t.key !== 'all' && <span className={`dot status-${t.key}`} />}
+              {t.label}
+              <span className="tab-count">{t.count}</span>
+            </button>
           ))}
-        </main>
-      )}
+        </div>
+
+        <div className="toolbar">
+          <input
+            className="search"
+            type="search"
+            placeholder="Search company, role, city, job ID…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <select className="filter" value={postingFilter} onChange={(e) => setPostingFilter(e.target.value)}>
+            <option value="all">All postings</option>
+            <option value="open">Open postings</option>
+            <option value="closed">Closed postings</option>
+          </select>
+        </div>
+
+        {loading ? (
+          <p className="empty-state">Loading…</p>
+        ) : (
+          <>
+            <ApplicationsTable
+              rows={pageRows}
+              sort={sort}
+              onSort={toggleSort}
+              onOpen={setEditing}
+              onStatusChange={changeStatus}
+            />
+            <Pagination
+              page={currentPage}
+              pageSize={pageSize}
+              total={visible.length}
+              onPage={setPage}
+              onPageSize={setPageSize}
+            />
+          </>
+        )}
+      </section>
 
       {editing && (
-        <ApplicationForm
-          initial={editing}
-          onSave={save}
-          onDelete={remove}
-          onCancel={() => setEditing(null)}
-        />
+        <ApplicationForm initial={editing} onSave={save} onDelete={remove} onCancel={() => setEditing(null)} />
       )}
+
+      {importing && <ImportDialog onDone={load} onCancel={() => setImporting(false)} />}
     </div>
   )
 }
