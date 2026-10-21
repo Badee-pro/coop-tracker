@@ -37,6 +37,11 @@ module Api
       render json: JobApplication::STATUSES.index_with { |s| counts.fetch(s, 0) }
     end
 
+    def import
+      rows = params.require(:rows).map { |row| row.permit(*JobApplication::IMPORT_FIELDS).to_h }
+      render json: JobApplication.import_rows(rows)
+    end
+
     private
 
     def set_job_application
@@ -48,7 +53,8 @@ module Api
     def job_application_params
       params.require(:job_application).permit(
         :company, :role, :status, :location, :job_url,
-        :applied_on, :deadline_on, :next_step_on, :notes
+        :applied_on, :deadline_on, :next_step_on, :notes,
+        :external_id, :term, :division, :city, :openings, :job_status
       )
     end
   end

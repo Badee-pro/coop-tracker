@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_230345) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_234821) do
   create_table "job_applications", force: :cascade do |t|
     t.string "company", null: false
     t.string "role", null: false
@@ -23,6 +23,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_230345) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "external_id"
+    t.string "term"
+    t.string "division"
+    t.string "city"
+    t.integer "openings"
+    t.string "job_status"
+    t.string "source_status"
+    t.index ["external_id"], name: "index_job_applications_on_external_id", unique: true
     t.index ["status"], name: "index_job_applications_on_status"
   end
 end
