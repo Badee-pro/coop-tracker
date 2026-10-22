@@ -1,27 +1,13 @@
-const BASE = '/api/job_applications'
+import * as server from './serverApi'
+import * as browser from './browserStore'
 
-async function request(path, options = {}) {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (res.status === 204) return null
-  const data = await res.json()
-  if (!res.ok) throw new Error((data.errors || ['Request failed']).join(', '))
-  return data
-}
+const store = import.meta.env.VITE_STORAGE === 'browser' ? browser : server
 
-export const listApplications = () => request(BASE)
+export const usesBrowserStorage = store === browser
 
-export const createApplication = (job_application) =>
-  request(BASE, { method: 'POST', body: JSON.stringify({ job_application }) })
-
-export const updateApplication = (id, job_application) =>
-  request(`${BASE}/${id}`, { method: 'PATCH', body: JSON.stringify({ job_application }) })
-
-export const getSyncStatus = () => request('/api/waterloo_works/status')
-
-export const importWaterlooWorksItems = (items) =>
-  request('/api/waterloo_works/import', { method: 'POST', body: JSON.stringify({ items }) })
-
-export const deleteApplication = (id) => request(`${BASE}/${id}`, { method: 'DELETE' })
+export const listApplications = () => store.listApplications()
+export const createApplication = (attrs) => store.createApplication(attrs)
+export const updateApplication = (id, attrs) => store.updateApplication(id, attrs)
+export const deleteApplication = (id) => store.deleteApplication(id)
+export const getSyncStatus = () => store.getSyncStatus()
+export const importWaterlooWorksItems = (items) => store.importWaterlooWorksItems(items)
