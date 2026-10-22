@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev:phone": "vite --host"
+    "dev:phone": "vite --host",
+    "build:web": "vite build --mode web",
+    "preview:web": "vite preview --mode web"
   },
   "dependencies": {
     "react": "^19.1.0",

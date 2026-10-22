@@ -106,7 +106,7 @@ export default function SyncBar({ onSynced }) {
         <div className={`setup extension-notice ${highlightInstall ? 'highlight' : ''}`}>
           <div className="extension-notice-head">
             <strong>Syncing with WaterlooWorks needs the Co-op Tracker Sync browser extension.</strong>
-            <a className="btn small primary" href="/coop-tracker-sync.zip" download>
+            <a className="btn small primary" href={`${import.meta.env.BASE_URL}coop-tracker-sync.zip`} download>
               Download extension
             </a>
           </div>
