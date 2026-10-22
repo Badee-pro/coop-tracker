@@ -56,6 +56,16 @@ function distToSegment(px, py, ax, ay, bx, by) {
   return Math.hypot(px - (ax + t * dx), py - (ay + t * dy))
 }
 
+const BLACK = [0, 0, 0]
+const GOLD = [254, 211, 76]
+const STRIPES = [
+  [248, 238, 165],
+  [253, 224, 59],
+  [251, 201, 50],
+  [234, 171, 0],
+]
+const STRIPE_TOP = 0.8
+
 function icon(x, y, size) {
   const u = x / size
   const v = y / size
@@ -67,17 +77,22 @@ function icon(x, y, size) {
   const alpha = Math.max(0, Math.min(1, 0.5 - outside / edge))
   if (alpha === 0) return [0, 0, 0, 0]
 
-  const check = Math.min(distToSegment(u, v, 0.27, 0.53, 0.43, 0.69), distToSegment(u, v, 0.43, 0.69, 0.74, 0.34))
-  const stroke = 0.075
-  const white = Math.max(0, Math.min(1, (stroke - check) / edge + 0.5))
-  const blue = [59, 91, 219]
-  const mix = (c) => Math.round(c * (1 - white) + 255 * white)
-  return [mix(blue[0]), mix(blue[1]), mix(blue[2]), Math.round(alpha * 255)]
+  let base = BLACK
+  if (v >= STRIPE_TOP) base = STRIPES[Math.min(3, Math.floor(u * 4))]
+
+  const check = Math.min(distToSegment(u, v, 0.25, 0.44, 0.42, 0.6), distToSegment(u, v, 0.42, 0.6, 0.75, 0.25))
+  const stroke = Math.max(0.085, 1.1 / size)
+  const gold = v < STRIPE_TOP - 0.02 ? Math.max(0, Math.min(1, (stroke - check) / edge + 0.5)) : 0
+  const mix = (i) => Math.round(base[i] * (1 - gold) + GOLD[i] * gold)
+  return [mix(0), mix(1), mix(2), Math.round(alpha * 255)]
 }
 
+const root = path.join(__dirname, '..')
 const dir = path.join(__dirname, 'icons')
 fs.mkdirSync(dir, { recursive: true })
 for (const size of [16, 32, 48, 128]) {
   fs.writeFileSync(path.join(dir, `icon-${size}.png`), png(size, icon))
 }
-console.log('icons written to', dir)
+fs.writeFileSync(path.join(root, 'frontend', 'public', 'favicon.png'), png(64, icon))
+fs.writeFileSync(path.join(root, 'docs', 'store-logo-300.png'), png(300, icon))
+console.log('icons written to extension/icons, frontend/public/favicon.png and docs/store-logo-300.png')
