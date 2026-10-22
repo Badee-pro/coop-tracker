@@ -1,4 +1,4 @@
-const TRACKER = 'http://localhost:5173';
+const TRACKERS = ['http://localhost:5173/', 'https://badee-pro.github.io/coop-tracker/'];
 const WW = 'https://waterlooworks.uwaterloo.ca';
 
 async function syncTabs() {
@@ -14,7 +14,7 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   if (!tab.openerTabId) return;
   const opener = await chrome.tabs.get(tab.openerTabId).catch(() => null);
   const target = tab.pendingUrl || tab.url || '';
-  if (!opener?.url?.startsWith(TRACKER) || (target && !target.startsWith(WW) && target !== 'about:blank')) return;
+  if (!TRACKERS.some((t) => opener?.url?.startsWith(t)) || (target && !target.startsWith(WW) && target !== 'about:blank')) return;
   const tabs = await syncTabs();
   tabs[tab.id] = tab.openerTabId;
   await saveSyncTabs(tabs);

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Co-op Tracker Sync",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Sync your WaterlooWorks co-op applications into Co-op Tracker from a tab in your own browser.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -16,19 +16,37 @@
       "32": "icons/icon-32.png"
     }
   },
-  "homepage_url": "https://github.com/Badee-pro/coop-tracker",
-  "permissions": ["tabs", "storage"],
-  "host_permissions": ["https://waterlooworks.uwaterloo.ca/*", "http://localhost:5173/*"],
-  "background": { "service_worker": "background.js" },
+  "homepage_url": "https://badee-pro.github.io/coop-tracker/",
+  "permissions": [
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://waterlooworks.uwaterloo.ca/*",
+    "http://localhost:5173/*",
+    "https://badee-pro.github.io/coop-tracker/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["http://localhost:5173/*"],
-      "js": ["tracker.js"],
+      "matches": [
+        "http://localhost:5173/*",
+        "https://badee-pro.github.io/coop-tracker/*"
+      ],
+      "js": [
+        "tracker.js"
+      ],
       "run_at": "document_start"
     },
     {
-      "matches": ["https://waterlooworks.uwaterloo.ca/*"],
-      "js": ["waterlooworks.js"],
+      "matches": [
+        "https://waterlooworks.uwaterloo.ca/*"
+      ],
+      "js": [
+        "waterlooworks.js"
+      ],
       "run_at": "document_idle"
     }
   ]
