@@ -126,88 +126,107 @@ export default function App() {
   const tabs = [{ key: 'all', label: 'All', count: total }, ...STATUSES.map((s) => ({ ...s, count: counts[s.key] }))]
 
   return (
-    <div className="app">
-      <header className="header">
-        <div>
-          <h1>Co-op Tracker</h1>
-          <p className="subtitle">{total} applications · {responseRate}% response rate</p>
+    <>
+      <header className="site-header">
+        <div className="site-header-inner">
+          <span className="wordmark">
+            <span className="wordmark-small">Co-op</span>
+            <span className="wordmark-large">Tracker</span>
+          </span>
+          <div className="header-actions">
+            <button className="btn on-dark" onClick={() => setImporting(true)}>Paste import</button>
+            <button className="btn gold" onClick={() => setEditing({})}>+ Add application</button>
+          </div>
         </div>
-        <div className="header-actions">
-          <button className="btn ghost" onClick={() => setImporting(true)}>Paste import</button>
-          <button className="btn primary" onClick={() => setEditing({})}>+ Add application</button>
+        <div className="stripes" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
         </div>
       </header>
 
-      <section className="stats">
-        <div className="stat"><span className="stat-label">Submitted</span><span className="stat-value">{submitted}</span></div>
-        <div className="stat"><span className="stat-label">Interviewing</span><span className="stat-value accent-interviewing">{counts.interviewing}</span></div>
-        <div className="stat"><span className="stat-label">Offers</span><span className="stat-value accent-offer">{counts.offer}</span></div>
-        <div className="stat"><span className="stat-label">Rejected</span><span className="stat-value accent-rejected">{counts.rejected}</span></div>
-        <div className="stat"><span className="stat-label">Postings closed</span><span className="stat-value">{closedPostings}</span></div>
-      </section>
-
-      <SyncBar onSynced={load} />
-      {error && <div className="banner">{error}</div>}
-
-      <section className="panel">
-        <div className="tabs" role="tablist">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              role="tab"
-              aria-selected={statusFilter === t.key}
-              className={`tab ${statusFilter === t.key ? 'active' : ''}`}
-              onClick={() => setStatusFilter(t.key)}
-            >
-              {t.key !== 'all' && <span className={`dot status-${t.key}`} />}
-              {t.label}
-              <span className="tab-count">{t.count}</span>
-            </button>
-          ))}
+      <div className="app">
+        <div className="page-title">
+          <h1>Your co-op applications</h1>
+          <p className="subtitle">{total} applications · {responseRate}% response rate</p>
         </div>
 
-        <div className="toolbar">
-          <input
-            className="search"
-            type="search"
-            placeholder="Search company, role, city, job ID…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <select className="filter" value={postingFilter} onChange={(e) => setPostingFilter(e.target.value)}>
-            <option value="all">All postings</option>
-            <option value="open">Open postings</option>
-            <option value="closed">Closed postings</option>
-          </select>
-        </div>
+        <section className="stats">
+          <div className="stat"><span className="stat-label">Submitted</span><span className="stat-value">{submitted}</span></div>
+          <div className="stat"><span className="stat-label">Interviewing</span><span className="stat-value accent-interviewing">{counts.interviewing}</span></div>
+          <div className="stat"><span className="stat-label">Offers</span><span className="stat-value accent-offer">{counts.offer}</span></div>
+          <div className="stat"><span className="stat-label">Rejected</span><span className="stat-value accent-rejected">{counts.rejected}</span></div>
+          <div className="stat"><span className="stat-label">Postings closed</span><span className="stat-value">{closedPostings}</span></div>
+        </section>
 
-        {loading ? (
-          <p className="empty-state">Loading…</p>
-        ) : (
-          <>
-            <ApplicationsTable
-              rows={pageRows}
-              sort={sort}
-              onSort={toggleSort}
-              onOpen={(a) => !window.matchMedia('(max-width: 640px)').matches && setEditing(a)}
-              onStatusChange={changeStatus}
+        <SyncBar onSynced={load} />
+        {error && <div className="banner">{error}</div>}
+
+        <section className="panel">
+          <div className="tabs" role="tablist">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={statusFilter === t.key}
+                className={`tab ${statusFilter === t.key ? 'active' : ''}`}
+                onClick={() => setStatusFilter(t.key)}
+              >
+                {t.key !== 'all' && <span className={`dot status-${t.key}`} />}
+                {t.label}
+                <span className="tab-count">{t.count}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="toolbar">
+            <input
+              className="search"
+              type="search"
+              placeholder="Search company, role, city, job ID…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
             />
-            <Pagination
-              page={currentPage}
-              pageSize={pageSize}
-              total={visible.length}
-              onPage={setPage}
-              onPageSize={setPageSize}
-            />
-          </>
+            <select className="filter" value={postingFilter} onChange={(e) => setPostingFilter(e.target.value)}>
+              <option value="all">All postings</option>
+              <option value="open">Open postings</option>
+              <option value="closed">Closed postings</option>
+            </select>
+          </div>
+
+          {loading ? (
+            <p className="empty-state">Loading…</p>
+          ) : (
+            <>
+              <ApplicationsTable
+                rows={pageRows}
+                sort={sort}
+                onSort={toggleSort}
+                onOpen={(a) => !window.matchMedia('(max-width: 640px)').matches && setEditing(a)}
+                onStatusChange={changeStatus}
+              />
+              <Pagination
+                page={currentPage}
+                pageSize={pageSize}
+                total={visible.length}
+                onPage={setPage}
+                onPageSize={setPageSize}
+              />
+            </>
+          )}
+        </section>
+
+        {editing && (
+          <ApplicationForm initial={editing} onSave={save} onDelete={remove} onCancel={() => setEditing(null)} />
         )}
-      </section>
 
-      {editing && (
-        <ApplicationForm initial={editing} onSave={save} onDelete={remove} onCancel={() => setEditing(null)} />
-      )}
+        {importing && <ImportDialog onDone={load} onCancel={() => setImporting(false)} />}
+      </div>
 
-      {importing && <ImportDialog onDone={load} onCancel={() => setImporting(false)} />}
-    </div>
+      <footer className="site-footer">
+        Co-op Tracker is a personal project and is not affiliated with or endorsed by the University of Waterloo.
+      </footer>
+    </>
   )
 }
