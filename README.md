@@ -21,20 +21,19 @@ cd frontend && npm install && npm run dev
 
 Run `start-phone.cmd` instead of `start.cmd`, then open the **Network** address printed in the React window on a phone on the same Wi-Fi. Phones get a read-only view: syncing, adding, editing and deleting only work on the computer running the tracker (requests from other devices are rejected). Avoid sharing it on public or campus Wi-Fi, since anyone on that network could view your list.
 
-## WaterlooWorks auto-sync
+## WaterlooWorks sync
 
-The Rails server calls the same JSON endpoint the WaterlooWorks Applications page uses (`applications.htm?page=N&…`), using your browser session cookie, and imports every page.
+Syncing uses the **Co-op Tracker Sync** browser extension in `extension/`.
 
-Click **Sync from WaterlooWorks** in the tracker. The Rails server drives its own Microsoft Edge profile (via [Ferrum](https://github.com/rubycdp/ferrum), stored in `backend/tmp/waterloo_works_browser`):
+One-time setup: open `edge://extensions` (or `chrome://extensions`), turn on **Developer mode**, click **Load unpacked** and pick the `extension` folder. Refresh the tracker; the "needs the extension" notice disappears once it's connected.
 
-1. It first checks invisibly whether that profile is still signed in. If so, it opens your Applications page, reads every page of the same JSON call WaterlooWorks uses, imports them and closes. No window appears.
-2. If not, it opens a visible Edge window on the WaterlooWorks sign-in. Sign in (Edge can save your password there for next time); the window then reads your applications and closes by itself.
+Then click **Sync from WaterlooWorks**. WaterlooWorks opens in a new tab beside the tracker; sign in there if asked (your browser's autofill works). The extension reads your applications from the same JSON call the WaterlooWorks Applications page uses (every page), hands them to the tracker tab, and closes the WaterlooWorks tab. Applications are matched by Job ID, so re-syncing updates them instead of duplicating.
 
-The status bar shows each step and the last sync time. Sessions live in `backend/tmp/` (gitignored) and are filtered from logs. `WW_COOKIE` / `WW_APPLICATIONS_URL` in `backend/.env` still work as a manual fallback.
+After changing the extension, click **Reload** on it in `edge://extensions` and run `package-extension.ps1` to rebuild the zip offered by the tracker's **Download extension** button.
 
-Applications are matched by Job ID, so re-syncing updates them instead of duplicating.
+Optional cookie-based background syncing (`WW_COOKIE`, `WW_APPLICATIONS_URL`, `WW_SYNC_MINUTES` in `backend/.env`) is off by default.
 
-API: `GET /api/waterloo_works/status`, `POST /api/waterloo_works/sync`, `POST /api/waterloo_works/sync/cancel`.
+API: `GET /api/waterloo_works/status`, `POST /api/waterloo_works/import` (items from the extension).
 
 ## API
 
