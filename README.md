@@ -1,11 +1,26 @@
 # Co-op Tracker
 
-Track co-op / internship applications on a Kanban board.
+Track all your University of Waterloo co-op applications, from WaterlooWorks and anywhere else, in one place.
 
-- `backend/` — Rails 8 API (SQLite) at http://localhost:3000
-- `frontend/` — React + Vite at http://localhost:5173 (proxies `/api` to Rails)
+**Live site:** https://badee-pro.github.io/coop-tracker/
 
-## Run
+## Using the live site
+
+1. Open the site and click **Download extension**, unzip it, then in `edge://extensions` (or `chrome://extensions`) turn on **Developer mode**, click **Load unpacked** and pick the unzipped `coop-tracker-sync` folder.
+2. Click **Sync from WaterlooWorks**. WaterlooWorks opens in a new tab; sign in if asked. The extension reads your applications and closes the tab.
+3. Add notes to any application, or add applications from outside WaterlooWorks with **+ Add application**.
+
+No account and no server: the live site keeps everything in your own browser (`localStorage`). Syncing again updates your WaterlooWorks applications and keeps your notes and the applications you added yourself. Data stays in the browser where you saved it.
+
+The site is built with `npm run build:web` (browser storage, `/coop-tracker/` path) and served by GitHub Pages from the `gh-pages` branch. To publish changes, run `deploy-site.ps1` (it lints, builds, and pushes the built site to `gh-pages`).
+
+## Project layout
+
+- `frontend/` — React + Vite. `npm run dev` uses the Rails API; `npm run build:web` builds the browser-storage website
+- `backend/` — Rails 8 API (SQLite) for running the tracker locally at http://localhost:3000
+- `extension/` — Co-op Tracker Sync browser extension (Manifest V3)
+
+## Run locally with Rails
 
 On Windows, double-click `start.cmd`. It opens both servers and the browser. Or run them manually:
 

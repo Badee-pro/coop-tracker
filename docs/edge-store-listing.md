@@ -37,8 +37,8 @@ Not affiliated with or endorsed by the University of Waterloo.
 
 ## Notes for certification (paste into "Notes for certification")
 
-This extension only works together with Co-op Tracker, a self-hosted web app (currently served at http://localhost:5173). To test:
-1. Run Co-op Tracker locally from https://github.com/Badee-pro/coop-tracker (see README).
+This extension works together with Co-op Tracker at https://badee-pro.github.io/coop-tracker/ (also runs locally at http://localhost:5173). To test:
+1. Open https://badee-pro.github.io/coop-tracker/.
 2. Click "Sync from WaterlooWorks". A WaterlooWorks tab opens; a University of Waterloo account is required to sign in.
 3. The extension reads the applications JSON that the WaterlooWorks applications page already loads, sends it to the Co-op Tracker tab via extension messaging, and closes the WaterlooWorks tab.
 
@@ -46,6 +46,6 @@ Permission justification:
 - tabs: identify the WaterlooWorks tab opened by Co-op Tracker (via openerTabId) and close it after syncing.
 - storage: session storage of the sync tab ID only.
 - Host waterlooworks.uwaterloo.ca: read the signed-in user's own applications list in that tab.
-- Host localhost:5173: deliver the list to the Co-op Tracker page.
+- Hosts badee-pro.github.io/coop-tracker and localhost:5173: run on the Co-op Tracker page to receive the list.
 
 No remote code, no data collection, no third-party requests.
