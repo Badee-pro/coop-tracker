@@ -1,14 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { getSyncStatus, cancelWaterlooWorksSync, importWaterlooWorksItems } from '../api'
+import { getSyncStatus, importWaterlooWorksItems } from '../api'
 
 const WW_APPLICATIONS = 'https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/applications.htm'
-const ACTIVE = ['starting', 'waiting_for_sign_in', 'reading']
-
-const PROGRESS = {
-  starting: 'Checking your WaterlooWorks sign-in…',
-  waiting_for_sign_in: 'Sign in to WaterlooWorks in the window that just opened. It reads your applications and closes on its own.',
-  reading: 'Reading your applications…',
-}
 
 function timeAgo(iso) {
   if (!iso) return 'never'
@@ -27,26 +20,17 @@ export default function SyncBar({ onSynced }) {
   const [phone, setPhone] = useState(isPhone)
   const [extension, setExtension] = useState(extensionVersion)
   const [tabState, setTabState] = useState(null)
-  const [showInstall, setShowInstall] = useState(false)
-  const lastDone = useRef(undefined)
-
-  const browserState = status?.browser?.state
-  const windowActive = ACTIVE.includes(browserState)
-
-  const refresh = async () => {
-    try {
-      const next = await getSyncStatus()
-      setStatus(next)
-      const doneAt = next.browser?.state === 'done' ? next.browser.at : null
-      if (lastDone.current !== undefined && doneAt && doneAt !== lastDone.current) onSynced()
-      lastDone.current = doneAt ?? lastDone.current ?? null
-    } catch {
-      setStatus(null)
-    }
-  }
+  const [highlightInstall, setHighlightInstall] = useState(false)
+  const onSyncedRef = useRef(onSynced)
 
   useEffect(() => {
+    onSyncedRef.current = onSynced
+  }, [onSynced])
+
+  useEffect(() => {
+    const refresh = () => getSyncStatus().then(setStatus).catch(() => setStatus(null))
     refresh()
+    const interval = setInterval(refresh, 30000)
     const timer = setTimeout(() => setExtension(extensionVersion()), 300)
     const onResize = () => setPhone(isPhone())
 
@@ -57,7 +41,7 @@ export default function SyncBar({ onSynced }) {
         try {
           setStatus(await importWaterlooWorksItems(event.data.items || []))
           setTabState(null)
-          await onSynced()
+          await onSyncedRef.current()
         } catch (err) {
           setTabState(`Import failed: ${err.message}`)
         }
@@ -69,25 +53,19 @@ export default function SyncBar({ onSynced }) {
     window.addEventListener('resize', onResize)
     window.addEventListener('message', onMessage)
     return () => {
+      clearInterval(interval)
       clearTimeout(timer)
       window.removeEventListener('resize', onResize)
       window.removeEventListener('message', onMessage)
     }
   }, [])
 
-  useEffect(() => {
-    const interval = setInterval(refresh, windowActive ? 1000 : 15000)
-    return () => clearInterval(interval)
-  }, [windowActive])
-
   const syncInTab = () => {
     window.open(WW_APPLICATIONS, '_blank')
     setTabState('waiting')
   }
 
-  const syncNow = () => (extension ? syncInTab() : setShowInstall(true))
-
-  const cancelWindow = async () => setStatus(await cancelWaterlooWorksSync())
+  const syncNow = () => (extension ? syncInTab() : setHighlightInstall(true))
 
   if (!status) return null
 
@@ -119,28 +97,13 @@ export default function SyncBar({ onSynced }) {
     )
   }
 
-  if (windowActive) {
-    return (
-      <div className="sync-bar sync-pending">
-        <span>
-          <span className="sync-dot" /> {PROGRESS[browserState]}
-        </span>
-        <span className="sync-actions">
-          <button className="btn small ghost" onClick={cancelWindow}>Cancel</button>
-        </span>
-      </div>
-    )
-  }
-
-  const tabError = tabState && !['waiting', 'importing'].includes(tabState) ? tabState : null
-  const windowError = browserState === 'failed' ? status.browser.error : null
-  const error = tabError || windowError
+  const error = tabState
   const n = status.fetched
 
   return (
     <>
       {!extension && (
-        <div className={`setup extension-notice ${showInstall ? 'highlight' : ''}`}>
+        <div className={`setup extension-notice ${highlightInstall ? 'highlight' : ''}`}>
           <div className="extension-notice-head">
             <strong>Syncing with WaterlooWorks needs the Co-op Tracker Sync browser extension.</strong>
             <a className="btn small primary" href="/coop-tracker-sync.zip" download>
