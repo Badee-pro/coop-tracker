@@ -5,6 +5,7 @@ import { isClosedPosting } from './format'
 import ApplicationsTable from './components/ApplicationsTable'
 import Pagination from './components/Pagination'
 import ApplicationForm from './components/ApplicationForm'
+import ApplicationDetails from './components/ApplicationDetails'
 import ImportDialog from './components/ImportDialog'
 import SyncBar from './components/SyncBar'
 import './App.css'
@@ -25,6 +26,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(null)
+  const [viewing, setViewing] = useState(null)
   const [importing, setImporting] = useState(false)
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -106,6 +108,18 @@ export default function App() {
     await deleteApplication(editing.id)
     setApplications((list) => list.filter((a) => a.id !== editing.id))
     setEditing(null)
+  }
+
+  const saveNotes = async (id, notes) => {
+    const updated = await updateApplication(id, { notes })
+    setApplications((list) => list.map((a) => (a.id === id ? updated : a)))
+    setViewing(updated)
+  }
+
+  const openApplication = (a) => {
+    const phone = window.matchMedia('(max-width: 640px)').matches
+    if (a.external_id) setViewing(a)
+    else if (!phone) setEditing(a)
   }
 
   const changeStatus = async (id, status) => {
@@ -203,7 +217,7 @@ export default function App() {
                 rows={pageRows}
                 sort={sort}
                 onSort={toggleSort}
-                onOpen={(a) => !window.matchMedia('(max-width: 640px)').matches && setEditing(a)}
+                onOpen={openApplication}
                 onStatusChange={changeStatus}
               />
               <Pagination
@@ -219,6 +233,10 @@ export default function App() {
 
         {editing && (
           <ApplicationForm initial={editing} onSave={save} onDelete={remove} onCancel={() => setEditing(null)} />
+        )}
+
+        {viewing && (
+          <ApplicationDetails application={viewing} onSaveNotes={saveNotes} onClose={() => setViewing(null)} />
         )}
 
         {importing && <ImportDialog onDone={load} onCancel={() => setImporting(false)} />}

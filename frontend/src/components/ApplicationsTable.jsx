@@ -1,6 +1,8 @@
 import { STATUSES } from '../constants'
 import { formatDate, daysFromToday, isClosedPosting } from '../format'
 
+const STATUS_LABEL = Object.fromEntries(STATUSES.map((s) => [s.key, s.label]))
+
 const COLUMNS = [
   { key: 'company', label: 'Company / Role' },
   { key: 'status', label: 'Status' },
@@ -55,17 +57,21 @@ export default function ApplicationsTable({ rows, sort, onSort, onOpen, onStatus
                   <div className="company">{a.company}</div>
                   <div className="role">{a.role}</div>
                 </td>
-                <td className="col-status" onClick={(e) => e.stopPropagation()}>
-                  <select
-                    className={`status-pill pill-${a.status}`}
-                    value={a.status}
-                    onChange={(e) => onStatusChange(a.id, e.target.value)}
-                    aria-label={`Status for ${a.company}`}
-                  >
-                    {STATUSES.map((s) => (
-                      <option key={s.key} value={s.key}>{s.label}</option>
-                    ))}
-                  </select>
+                <td className="col-status" onClick={(e) => !a.external_id && e.stopPropagation()}>
+                  {a.external_id ? (
+                    <span className={`status-tag pill-${a.status}`}>{STATUS_LABEL[a.status]}</span>
+                  ) : (
+                    <select
+                      className={`status-pill pill-${a.status}`}
+                      value={a.status}
+                      onChange={(e) => onStatusChange(a.id, e.target.value)}
+                      aria-label={`Status for ${a.company}`}
+                    >
+                      {STATUSES.map((s) => (
+                        <option key={s.key} value={s.key}>{s.label}</option>
+                      ))}
+                    </select>
+                  )}
                   {a.source_status && a.source_status !== 'Applied' && (
                     <div className="source-status">WW: {a.source_status}</div>
                   )}

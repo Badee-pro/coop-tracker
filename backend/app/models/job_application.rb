@@ -16,6 +16,10 @@ class JobApplication < ApplicationRecord
 
   scope :ordered, -> { order(Arel.sql("COALESCE(next_step_on, deadline_on, applied_on) IS NULL"), :next_step_on, updated_at: :desc) }
 
+  def synced?
+    external_id.present?
+  end
+
   def self.status_for(source_status)
     SOURCE_STATUS_MAP.find { |pattern, _| source_status.to_s.match?(pattern) }&.last || "applied"
   end

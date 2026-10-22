@@ -20,7 +20,8 @@ module Api
     end
 
     def update
-      if @job_application.update(job_application_params)
+      attrs = @job_application.synced? ? job_application_params.slice(:notes) : job_application_params
+      if @job_application.update(attrs)
         render json: @job_application
       else
         render json: { errors: @job_application.errors.full_messages }, status: :unprocessable_content

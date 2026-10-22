@@ -252,6 +252,43 @@ h1 { margin: 0; font-size: 40px; line-height: 1.1; }
 .pill-offer { background-color: color-mix(in srgb, var(--offer) 18%, transparent); color: var(--offer); }
 .pill-rejected { background-color: color-mix(in srgb, var(--rejected) 16%, transparent); color: var(--rejected); }
 .status-pill option { color: var(--text); background: var(--surface); }
+.status-tag {
+  display: inline-block;
+  border-radius: 2px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.details { width: min(720px, 100%); }
+.details-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.details-head h2 { margin: 0; }
+.details-role { margin: 4px 0 0; font-size: 16px; color: var(--muted); }
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 20px 0 8px;
+  border-top: 1px solid var(--border);
+}
+.detail-field { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.detail-field:nth-child(odd) { padding-right: 16px; }
+.detail-field dt { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.detail-field dd { margin: 4px 0 0; font-size: 15px; font-weight: 500; }
+.details-source { font-size: 12px; color: var(--muted); margin: 8px 0 20px; }
+.notes-label { display: block; font-family: var(--heading-font); font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+.notes-box {
+  width: 100%;
+  border: 1px solid #8c8c8c;
+  border-radius: 0;
+  padding: 10px 12px;
+  background: #fffdf3;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.notes-box:focus { outline: 3px solid var(--gold); outline-offset: 0; border-color: #000; }
+.saved-hint { align-self: center; font-size: 13px; color: var(--offer); font-weight: 500; }
 .source-status { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
 .posting { font-size: 12px; white-space: nowrap; }
