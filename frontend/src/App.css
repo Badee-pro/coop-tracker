@@ -124,10 +124,8 @@ h1 { margin: 0; font-size: 40px; line-height: 1.1; }
 .sync-error { border-color: color-mix(in srgb, var(--rejected) 60%, var(--border)); }
 .sync-error .sync-dot { background: var(--rejected); }
 .sync-last { color: var(--muted); }
+.sync-bar a { color: var(--text); font-weight: 600; }
 .sync-actions { display: flex; gap: 6px; flex-shrink: 0; }
-.extension-notice-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.extension-notice-head .btn { text-decoration: none; }
-.extension-notice.highlight { box-shadow: 0 0 0 3px var(--gold); }
 @keyframes pulse { 50% { opacity: 0.3; } }
 
 .setup {

@@ -20,7 +20,7 @@ export default function SyncBar({ onSynced }) {
   const [phone, setPhone] = useState(isPhone)
   const [extension, setExtension] = useState(extensionVersion)
   const [tabState, setTabState] = useState(null)
-  const [highlightInstall, setHighlightInstall] = useState(false)
+  const [needsExtension, setNeedsExtension] = useState(false)
   const onSyncedRef = useRef(onSynced)
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function SyncBar({ onSynced }) {
     setTabState('waiting')
   }
 
-  const syncNow = () => (extension ? syncInTab() : setHighlightInstall(true))
+  const syncNow = () => (extension ? syncInTab() : setNeedsExtension(true))
 
   if (!status) return null
 
@@ -102,28 +102,15 @@ export default function SyncBar({ onSynced }) {
 
   return (
     <>
-      {!extension && (
-        <div className={`setup extension-notice ${highlightInstall ? 'highlight' : ''}`}>
-          <div className="extension-notice-head">
-            <strong>Syncing with WaterlooWorks needs the Co-op Tracker Sync browser extension.</strong>
-            <a className="btn small primary" href={`${import.meta.env.BASE_URL}coop-tracker-sync.zip`} download>
-              Download extension
-            </a>
-          </div>
-          <ol>
-            <li>Download the extension and unzip it (right-click → <strong>Extract All</strong>).</li>
-            <li>
-              Open <code>edge://extensions</code> (or <code>chrome://extensions</code>), turn on <strong>Developer mode</strong>,
-              click <strong>Load unpacked</strong> and pick the unzipped <code>coop-tracker-sync</code> folder.
-            </li>
-            <li>Refresh this page. Then <strong>Sync from WaterlooWorks</strong> opens a tab, syncs and closes it by itself.</li>
-          </ol>
-        </div>
-      )}
-      <div className={`sync-bar ${error || !status.last_success_at ? 'sync-error' : 'sync-ok'}`}>
+      <div className={`sync-bar ${error || needsExtension || !status.last_success_at ? 'sync-error' : 'sync-ok'}`}>
         <span>
           <span className="sync-dot" />{' '}
-          {error ? (
+          {needsExtension ? (
+            <>
+              <strong>Syncing needs the Co-op Tracker Sync extension.</strong>{' '}
+              <a href={`${import.meta.env.BASE_URL}coop-tracker-sync.zip`} download>Download it</a>
+            </>
+          ) : error ? (
             <>
               <strong>{error}</strong>
               {status.last_success_at && <span className="sync-last"> · Last synced {timeAgo(status.last_success_at)}</span>}
