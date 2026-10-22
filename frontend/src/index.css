@@ -39,4 +39,10 @@ body {
   background: var(--bg);
 }
 
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 input, select, textarea, button { font: inherit; color: inherit; }
