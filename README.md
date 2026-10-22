@@ -4,12 +4,6 @@ Track all your University of Waterloo co-op applications, from WaterlooWorks and
 
 **Live site:** https://badee-pro.github.io/coop-tracker/
 
-## Using the live site
-
-1. Open the site and click **Download extension**, unzip it, then in `edge://extensions` (or `chrome://extensions`) turn on **Developer mode**, click **Load unpacked** and pick the unzipped `coop-tracker-sync` folder.
-2. Click **Sync from WaterlooWorks**. WaterlooWorks opens in a new tab; sign in if asked. The extension reads your applications and closes the tab.
-3. Add notes to any application, or add applications from outside WaterlooWorks with **+ Add application**.
-
 No account and no server: the live site keeps everything in your own browser (`localStorage`). Syncing again updates your WaterlooWorks applications and keeps your notes and the applications you added yourself. Data stays in the browser where you saved it.
 
 The site is built with `npm run build:web` (browser storage, `/coop-tracker/` path) and served by GitHub Pages from the `gh-pages` branch. To publish changes, run `deploy-site.ps1` (it lints, builds, and pushes the built site to `gh-pages`).
