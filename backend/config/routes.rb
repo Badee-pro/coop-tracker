@@ -7,7 +7,6 @@ Rails.application.routes.draw do
 
     resources :job_applications do
       get :stats, on: :collection
-      post :import, on: :collection
     end
   end
 end

@@ -6,7 +6,6 @@ import ApplicationsTable from './components/ApplicationsTable'
 import Pagination from './components/Pagination'
 import ApplicationForm from './components/ApplicationForm'
 import ApplicationDetails from './components/ApplicationDetails'
-import ImportDialog from './components/ImportDialog'
 import SyncBar from './components/SyncBar'
 import './App.css'
 
@@ -27,7 +26,6 @@ export default function App() {
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(null)
   const [viewing, setViewing] = useState(null)
-  const [importing, setImporting] = useState(false)
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [postingFilter, setPostingFilter] = useState('all')
@@ -148,7 +146,6 @@ export default function App() {
             <span className="wordmark-large">Tracker</span>
           </span>
           <div className="header-actions">
-            <button className="btn on-dark" onClick={() => setImporting(true)}>Paste import</button>
             <button className="btn gold" onClick={() => setEditing({})}>+ Add application</button>
           </div>
         </div>
@@ -239,7 +236,6 @@ export default function App() {
           <ApplicationDetails application={viewing} onSaveNotes={saveNotes} onClose={() => setViewing(null)} />
         )}
 
-        {importing && <ImportDialog onDone={load} onCancel={() => setImporting(false)} />}
       </div>
 
       <footer className="site-footer">

@@ -19,9 +19,6 @@ export const createApplication = (job_application) =>
 export const updateApplication = (id, job_application) =>
   request(`${BASE}/${id}`, { method: 'PATCH', body: JSON.stringify({ job_application }) })
 
-export const importApplications = (rows) =>
-  request(`${BASE}/import`, { method: 'POST', body: JSON.stringify({ rows }) })
-
 export const getSyncStatus = () => request('/api/waterloo_works/status')
 
 export const importWaterlooWorksItems = (items) =>

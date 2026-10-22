@@ -38,11 +38,6 @@ module Api
       render json: JobApplication::STATUSES.index_with { |s| counts.fetch(s, 0) }
     end
 
-    def import
-      rows = params.require(:rows).map { |row| row.permit(*JobApplication::IMPORT_FIELDS).to_h }
-      render json: JobApplication.import_rows(rows)
-    end
-
     private
 
     def set_job_application
