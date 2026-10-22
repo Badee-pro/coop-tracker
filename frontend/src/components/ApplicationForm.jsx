@@ -62,10 +62,6 @@ export default function ApplicationForm({ initial, onSave, onDelete, onCancel })
             <input value={form.term} onChange={set('term')} placeholder="2027 - Winter" />
           </label>
           <label>
-            WaterlooWorks Job ID
-            <input value={form.external_id} onChange={set('external_id')} />
-          </label>
-          <label>
             Division
             <input value={form.division} onChange={set('division')} />
           </label>
