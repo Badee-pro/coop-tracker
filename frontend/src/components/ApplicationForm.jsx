@@ -17,7 +17,7 @@ export default function ApplicationForm({ initial, onSave, onDelete, onCancel })
     setSaving(true)
     setError(null)
     try {
-      const { id, created_at, updated_at, source_status, ...payload } = form
+      const payload = Object.fromEntries(Object.keys(EMPTY_APPLICATION).map((key) => [key, form[key]]))
       if (payload.external_id === '') payload.external_id = null
       await onSave(payload)
     } catch (err) {
